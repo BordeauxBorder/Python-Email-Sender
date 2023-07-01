@@ -1,0 +1,59 @@
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
+from email.mime.image import MIMEImage
+from email.mime.base import MIMEBase
+from email import encoders
+
+def send_email(subject, message, sender_email, sender_password, recipient_email, attachment_path=None):
+    # Set up the MIME message
+    msg = MIMEMultipart()
+    msg['From'] = sender_email
+    msg['To'] = recipient_email
+    msg['Subject'] = subject
+
+    # Attach the message to the MIME message
+    msg.attach(MIMEText(message, 'plain'))
+
+    if attachment_path:
+        # Open and attach the file
+        with open(attachment_path, 'rb') as attachment:
+            # Create a MIMEBase object
+            mime_base = MIMEBase('application', 'octet-stream')
+            mime_base.set_payload(attachment.read())
+            # Encode the attachment
+            encoders.encode_base64(mime_base)
+            # Set the filename
+            mime_base.add_header('Content-Disposition', 'attachment', filename=attachment_path)
+            # Attach the file to the email
+            msg.attach(mime_base)
+
+    try:
+        # Connect to the SMTP server
+        server = smtplib.SMTP('smtp-mail.email.com', 587)
+        server.starttls()
+
+        # Log in to your email account
+        server.login(sender_email, sender_password)
+
+        # Send the email
+        server.send_message(msg)
+
+        print("Email sent successfully!")
+
+    except Exception as e:
+        print("An error occurred while sending the email:", str(e))
+
+    finally:
+        # Disconnect from the server
+        server.quit()
+
+# Example usage
+subject = "Write your subject!"
+message = "Write your body paragraph."
+sender_email = "your_email@example.com"  # Your email address
+sender_password = "your_password"  # Your email password
+recipient_email = "recipient@example.com"  # Recipient's email address
+attachment_path = "path_to_your_image.jpg"  # Path to the image file
+
+send_email(subject, message, sender_email, sender_password, recipient_email, attachment_path)
